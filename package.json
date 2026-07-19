@@ -1,6 +1,6 @@
 {
   "name": "mailos-engine",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "MailOS - an open-source intelligence layer for email, and the first connector in a channel-agnostic autonomous agent engine. Built for the Qwen Cloud Hackathon.",
   "main": "src/index.js",
   "license": "MIT",
