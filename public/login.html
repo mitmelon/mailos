@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MailOS</title>
+<script>
+  (function () {
+    var t = localStorage.getItem('mailos-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .wrap { position: relative; z-index: 2; width: 100%; max-width: 420px; padding: 24px; }
+  .logo-mark {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(155deg, var(--accent), #7a76ff);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 26px;
+    box-shadow: 0 10px 30px rgba(91,91,240,0.28);
+  }
+  .card { padding: 44px 40px 34px; }
+  h1 { font-size: 21px; font-weight: 600; text-align: center; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .sub { font-size: 14px; color: var(--text-secondary); text-align: center; margin: 0 0 32px; line-height: 1.55; }
+  .field { margin-bottom: 18px; }
+  .err { font-size: 13.5px; color: var(--accent-red); text-align: center; margin: -6px 0 18px; min-height: 0; }
+  .submit-btn { width: 100%; padding: 13px; font-size: 14.5px; margin-top: 8px; }
+  .foot { text-align: center; margin-top: 26px; font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+  <div class="ambient-bg"></div>
+  <div class="grain"></div>
+
+  <div class="wrap fade-up">
+    <div class="logo-mark">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7l9 6 9-6"/>
+        <rect x="3" y="5" width="18" height="14" rx="2.5"/>
+      </svg>
+    </div>
+
+    <div class="glass card">
+      <h1 id="title">Welcome back</h1>
+      <p class="sub" id="subtitle">Sign in to your MailOS engine.</p>
+
+      <form id="form">
+        <div class="field">
+          <label class="field-label">Username</label>
+          <input class="input" type="text" id="username" autocomplete="username" placeholder="admin" required>
+        </div>
+        <div class="field" id="password-wrap">
+          <label class="field-label" id="password-label">Password</label>
+          <input class="input" type="password" id="password-main" autocomplete="current-password" placeholder="Enter your password" required minlength="8">
+        </div>
+        <div class="field" id="confirm-wrap" style="display:none">
+          <label class="field-label">Confirm password</label>
+          <input class="input" type="password" id="password" autocomplete="new-password" placeholder="Repeat your password">
+        </div>
+        <p class="err" id="error"></p>
+        <button class="btn btn-primary submit-btn" type="submit" id="submit-btn">
+          <span id="submit-label">Sign in</span>
+        </button>
+      </form>
+      <p class="foot" id="mode-hint">First time here? MailOS will detect it automatically.</p>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let mode = 'login';
+
+    async function init() {
+      try {
+        const status = await fetch('/auth/status', { credentials: 'include' }).then(r => r.json());
+        if (status.hasAdminUser) {
+          try { await api.get('/auth/me'); window.location.href = '/app.html'; return; }
+          catch { /* not logged in yet */ }
+          setMode('login');
+        } else {
+          setMode('register');
+        }
+      } catch { setMode('login'); }
+    }
+
+    function setMode(next) {
+      mode = next;
+      const isRegister = mode === 'register';
+      document.getElementById('title').textContent = isRegister ? 'Set up MailOS' : 'Welcome back';
+      document.getElementById('subtitle').textContent = isRegister
+        ? 'Create the admin account for this engine — this only happens once.'
+        : 'Sign in to your MailOS engine.';
+      document.getElementById('confirm-wrap').style.display = isRegister ? 'block' : 'none';
+      document.getElementById('password').required = isRegister;
+      document.getElementById('submit-label').textContent = isRegister ? 'Create account' : 'Sign in';
+      document.getElementById('mode-hint').textContent = isRegister
+        ? 'This account will control every mailbox connected to this engine.'
+        : 'Configured once by whoever set up this MailOS instance.';
+    }
+
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('error');
+      errEl.textContent = '';
+      const username = document.getElementById('username').value.trim();
+      const passwordMain = document.getElementById('password-main').value;
+      const btn = document.getElementById('submit-btn');
+
+      if (mode === 'register') {
+        const confirm = document.getElementById('password').value;
+        if (passwordMain !== confirm) { errEl.textContent = "Passwords don't match."; return; }
+      }
+
+      btn.disabled = true;
+      const originalLabel = document.getElementById('submit-label').textContent;
+      document.getElementById('submit-label').innerHTML = '<span class="spinner" style="display:inline-block;vertical-align:-3px"></span>';
+
+      try {
+        if (mode === 'register') await api.post('/auth/register', { username, password: passwordMain });
+        else await api.post('/auth/login', { username, password: passwordMain });
+        window.location.href = '/app.html';
+      } catch (err) {
+        errEl.textContent = err.message || 'Something went wrong.';
+        btn.disabled = false;
+        document.getElementById('submit-label').textContent = originalLabel;
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

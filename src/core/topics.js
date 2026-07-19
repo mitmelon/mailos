@@ -1,0 +1,16 @@
+module.exports = {
+  EMAIL_RECEIVED: 'email.received',
+  EMAIL_BLOCKED: 'email.blocked',
+  EMAIL_SANITIZED: 'email.sanitized',
+  EMAIL_CLASSIFIED: 'email.classified',
+  EMAIL_DECIDED: 'email.decided',
+  EMAIL_REPLY_DRAFTED: 'email.reply.drafted',
+  EMAIL_SEND_REQUESTED: 'email.send.requested',
+  EMAIL_SENT: 'email.sent',
+  NEWSLETTER_INSIGHT: 'newsletter.insight.generated',
+  OPPORTUNITY_DETECTED: 'opportunity.detected',
+  MEMORY_CREATED: 'memory.created',
+  MAILBOX_SYNC_REQUESTED: 'mailbox.sync.requested',
+  NEGOTIATION_ESCALATED: 'negotiation.escalated',
+  NEGOTIATION_AGREED: 'negotiation.agreed',
+};

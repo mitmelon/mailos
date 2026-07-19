@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MailOS</title>
+<script>
+  (function () {
+    var t = localStorage.getItem('mailos-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+<style>
+  .shell { display: flex; height: 100vh; position: relative; z-index: 2; }
+  .sidebar { width: 240px; flex-shrink: 0; display: flex; flex-direction: column; padding: 20px 14px; border-right: 1px solid var(--border); }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 4px; }
+  .brand-mark { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(155deg, var(--accent), #7a76ff); display: flex; align-items: center; justify-content: center; }
+  .brand-name { font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; }
+  .brand-version { font-size: 10.5px; color: var(--text-muted); padding: 0 8px 18px; }
+  .nav-group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 18px; }
+  .sidebar-footer { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+  .user-row { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.18s var(--ease); }
+  .user-row:hover { background: var(--surface); }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-hover); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 22px 32px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .topbar h1 { font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .topbar-sub { font-size: 13.5px; color: var(--text-secondary); margin: 3px 0 0; }
+  .content { flex: 1; overflow-y: auto; padding: 32px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 30px; }
+  .stat-card { padding: 20px 22px; }
+  .stat-label { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 9px; display: flex; align-items: center; gap: 6px; }
+  .stat-value { font-size: 29px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  .section-head h2 { font-size: 15.5px; font-weight: 600; margin: 0; }
+
+  .list-item { padding: 18px 20px; margin-bottom: 10px; }
+  .list-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  .icon-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: transparent; border: 1px solid var(--border); cursor: pointer; color: var(--text-secondary); transition: all 0.18s var(--ease); }
+  .icon-btn:hover { background: var(--surface); color: var(--text-primary); border-color: var(--border-strong); }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 22px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .tab { padding: 10px 4px; margin-right: 20px; font-size: 13.5px; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.18s var(--ease); }
+  .tab.active { color: var(--text-primary); border-color: var(--accent); }
+
+  .kv-row { display: flex; justify-content: space-between; font-size: 13.5px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-row span:first-child { color: var(--text-secondary); }
+
+  .agent-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .agent-card { padding: 18px 20px; min-width: 0; }
+  .agent-card-name { font-size: 13.5px; font-weight: 600; overflow-wrap: break-word; word-break: break-word; }
+  .mailbox-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 30px; }
+
+  @media (max-width: 860px) {
+    .shell { flex-direction: column; height: auto; min-height: 100vh; }
+    .sidebar { width: 100%; flex-direction: row; align-items: center; padding: 12px 16px; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .sidebar .brand { padding: 0 10px 0 0; flex-shrink: 0; }
+    .brand-version { display: none; }
+    .nav-group { flex-direction: row; margin-bottom: 0; gap: 4px; }
+    .nav-item span { display: none; }
+    .sidebar-footer { margin-top: 0; margin-left: auto; padding-top: 0; border-top: none; flex-direction: row; flex-shrink: 0; }
+    .user-row div { display: none; }
+    .topbar { padding: 16px 18px; flex-wrap: wrap; gap: 10px; }
+    .content { padding: 18px; }
+    .agent-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .stat-grid { grid-template-columns: 1fr; }
+    .agent-grid { grid-template-columns: 1fr; }
+    .modal-panel { max-width: 100%; }
+    .topbar-sub { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="ambient-bg"></div>
+  <div class="grain"></div>
+  <div id="toast-stack"></div>
+
+  <div class="shell">
+    <aside class="sidebar fade-in">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2.5"/></svg>
+        </div>
+        <span class="brand-name">MailOS</span>
+      </div>
+      <div class="brand-version" id="version-label">v...</div>
+
+      <nav class="nav-group" id="nav-main"></nav>
+
+      <div class="sidebar-footer">
+        <div class="theme-toggle" id="theme-toggle">
+          <button data-theme-choice="light" title="Light">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
+          <button data-theme-choice="dark" title="Dark">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+        </div>
+        <div class="user-row" id="logout-trigger">
+          <div class="avatar" id="user-avatar">·</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" id="user-name">···</div>
+            <div style="font-size:11.5px; color:var(--text-muted)">Sign out</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar fade-in">
+        <div>
+          <h1 id="page-title">Dashboard</h1>
+          <p class="topbar-sub" id="page-sub">Everything MailOS has handled for you.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-secondary btn-sm" data-action="go-ask">Ask MailOS</button>
+          <button class="btn btn-primary btn-sm" data-action="open-connect-modal">Connect email</button>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <section class="view" id="view-dashboard">
+          <div id="update-banner"></div>
+          <div class="stat-grid stagger" id="stat-grid"></div>
+
+          <div class="section-head">
+            <h2>Daily intelligence report</h2>
+            <button class="btn btn-ghost btn-sm" data-action="refresh-report">Refresh</button>
+          </div>
+          <div class="glass-card fade-up" style="padding:24px 26px; margin-bottom:30px;" id="daily-report"></div>
+
+          <div class="section-head">
+            <h2>Per-mailbox breakdown</h2>
+          </div>
+          <div class="mailbox-stat-grid stagger" id="mailbox-stat-grid"></div>
+
+          <div id="dashboard-empty" class="empty-state glass-card" style="display:none;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); margin-bottom:16px;"><path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2.5"/></svg>
+            <h3 style="font-size:16px; font-weight:600; margin:0 0 6px;">Connect your first mailbox</h3>
+            <p style="font-size:13.5px; max-width:340px; margin:0 0 20px;">MailOS starts protecting, learning, and negotiating the moment a mailbox is connected.</p>
+            <button class="btn btn-primary" data-action="open-connect-modal">Connect email</button>
+          </div>
+        </section>
+
+        <section class="view" id="view-mailboxes">
+          <div id="mailbox-list" class="stagger"></div>
+        </section>
+
+        <section class="view" id="view-emails">
+          <div class="tabs" id="email-tabs">
+            <div class="tab active" data-status="">All</div>
+            <div class="tab" data-status="requires_human">Needs attention</div>
+            <div class="tab" data-status="notify">Notify</div>
+            <div class="tab" data-status="blocked">Blocked</div>
+          </div>
+          <div id="email-list" class="stagger"></div>
+        </section>
+
+        <section class="view" id="view-negotiations">
+          <div class="section-head">
+            <div class="tabs" id="negotiation-tabs">
+              <div class="tab active" data-status="">All</div>
+              <div class="tab" data-status="open">Open</div>
+              <div class="tab" data-status="escalated">Needs you</div>
+              <div class="tab" data-status="agreed">Agreed</div>
+            </div>
+            <button class="btn btn-primary btn-sm" data-action="open-start-negotiation-modal">Start negotiation</button>
+          </div>
+          <div id="negotiation-list" class="stagger"></div>
+        </section>
+
+        <section class="view" id="view-memory">
+          <div style="display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap;">
+            <input class="input" id="memory-search" placeholder="Search memory — e.g. 'pricing preferences'" style="max-width:420px; flex:1;">
+            <button class="btn btn-secondary btn-sm" data-action="search-memory">Search</button>
+            <button class="btn btn-ghost btn-sm" data-action="consolidate-memory" style="margin-left:auto;">Consolidate now</button>
+          </div>
+          <div id="memory-list" class="stagger"></div>
+        </section>
+
+        <section class="view" id="view-knowledge">
+          <div id="knowledge-list" class="stagger"></div>
+        </section>
+
+        <section class="view" id="view-opportunities">
+          <div id="opportunities-list" class="stagger"></div>
+        </section>
+
+        <section class="view" id="view-ask">
+          <div class="glass-card" style="padding:26px; max-width:760px;">
+            <div style="display:flex; gap:10px; margin-bottom:18px;">
+              <input class="input" id="ask-input" placeholder="What have you learned this week?">
+              <button class="btn btn-primary" data-action="submit-ask">Ask</button>
+            </div>
+            <div id="ask-answer"></div>
+          </div>
+        </section>
+
+        <section class="view" id="view-settings">
+          <div style="max-width:600px;">
+            <div class="glass-card" style="padding:26px; margin-bottom:22px;">
+              <h3 style="font-size:15px; font-weight:600; margin:0 0 5px;">Qwen provider</h3>
+              <p style="font-size:13px; color:var(--text-secondary); margin:0 0 20px;">Powers every AI agent in the pipeline. Changes apply immediately, no restart needed.</p>
+              <div class="field">
+                <label class="field-label">API key</label>
+                <input class="input" type="password" id="settings-qwen-key" placeholder="sk-...">
+              </div>
+              <div class="field">
+                <label class="field-label">Base URL</label>
+                <input class="input" id="settings-qwen-baseurl">
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="field">
+                  <label class="field-label">Chat model</label>
+                  <input class="input" id="settings-qwen-model">
+                </div>
+                <div class="field">
+                  <label class="field-label">Embedding model</label>
+                  <input class="input" id="settings-qwen-embed-model">
+                </div>
+              </div>
+            </div>
+
+            <div class="glass-card" style="padding:26px; margin-bottom:22px;">
+              <h3 style="font-size:15px; font-weight:600; margin:0 0 5px;">Negotiation defaults</h3>
+              <p style="font-size:13px; color:var(--text-secondary); margin:0 0 20px;">Applied to any mailbox without its own override. Hard limits, not suggestions.</p>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div class="field">
+                  <label class="field-label">Max rounds</label>
+                  <input class="input" type="number" id="settings-max-rounds">
+                </div>
+                <div class="field">
+                  <label class="field-label">Max discount %</label>
+                  <input class="input" type="number" id="settings-max-discount">
+                </div>
+                <div class="field">
+                  <label class="field-label">Approval above amount</label>
+                  <input class="input" type="number" id="settings-approval-above" placeholder="none">
+                </div>
+                <div class="field">
+                  <label class="field-label">Min confidence to auto-send</label>
+                  <input class="input" type="number" step="0.05" min="0" max="1" id="settings-min-confidence">
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" data-action="save-settings">Save settings</button>
+          </div>
+
+          <div class="section-head" style="margin-top:40px;">
+            <h2>Agent status</h2>
+          </div>
+          <div class="agent-grid" id="agent-status-grid"></div>
+
+          <div class="section-head" style="margin-top:40px;">
+            <h2>Recent errors <span class="text-muted" style="font-weight:400; font-size:12.5px;">(audit log)</span></h2>
+          </div>
+          <div id="errors-list"></div>
+
+          <div class="section-head" style="margin-top:40px;">
+            <h2>Login security</h2>
+          </div>
+          <div id="login-blocks-list"></div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/toast.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
