@@ -10,7 +10,7 @@ const api = (() => {
       opts.body = JSON.stringify(body);
     }
     const res = await fetch(path, opts);
-    if (res.status === 401 && !path.startsWith('/auth/')) {
+    if (res.status === 401 && path !== '/auth/login' && path !== '/auth/register') {
       window.location.href = '/login.html';
       return new Promise(() => {}); // never resolves — we're navigating away
     }

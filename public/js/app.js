@@ -30,7 +30,14 @@ async function boot() {
     const { user } = await api.get('/auth/me');
     document.getElementById('user-name').textContent = user.username;
     document.getElementById('user-avatar').textContent = user.username.slice(0, 2).toUpperCase();
-  } catch { return; }
+  } catch (err) {
+    // api.js handles 401 redirect, if we're here it's another error
+    // but still redirect to login to be safe
+    if (!window.location.href.includes('login.html')) {
+      window.location.href = '/login.html';
+    }
+    return;
+  }
 
   renderSidebar();
   wireDelegatedActions();
