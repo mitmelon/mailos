@@ -7,7 +7,7 @@ const authService = require('../services/AuthService');
 // log in in the first place.
 const PUBLIC_ROUTES = new Set(['/health', '/auth/status', '/auth/register', '/auth/login', '/auth/logout']);
 const PUBLIC_PREFIXES = ['/css/', '/js/', '/img/'];
-const PUBLIC_FILES = new Set(['/', '/login.html', '/app.html', '/favicon.ico']);
+const PUBLIC_FILES = new Set(['/', '/login.html', '/app.html', '/favicon.ico', '/logo.png']);
 
 function isPublic(url) {
   const path = url.split('?')[0];

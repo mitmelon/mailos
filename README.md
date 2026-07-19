@@ -1,6 +1,14 @@
-# 📬 MailOS
+<div align="center">
+  <img src="asset/logo.png" alt="MailOS Logo" width="120">
+  <h1>MailOS</h1>
+  <p><strong>An open-source AI communication runtime</strong></p>
+</div>
 
-**An open-source AI communication runtime**
+<div align="center">
+  <a href="https://github.com/ziondefi/mailos/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg" alt="Node Version"></a>
+  <a href="https://qwenlm.github.io/"><img src="https://img.shields.io/badge/powered%20by-Qwen-5B5BFF.svg" alt="Powered by Qwen"></a>
+</div>
 
 > ✉️ Email was built for humans. **MailOS** is built for AI agents to communicate *on behalf of* humans — reading, negotiating, and reaching agreements over ordinary email, and only interrupting the owner when their judgment is actually needed.
 
@@ -16,6 +24,160 @@ MailOS connects to a mailbox, listens 24/7, and gets straight to work:
 
 ⚡ Powered end-to-end by **Qwen**.
 📄 MIT licensed · 🧩 Designed to be embedded into any application.
+
+---
+
+## 🎯 Use Cases
+
+### For Businesses
+
+#### 💼 Customer Support Automation
+Handle high-volume customer inquiries automatically. MailOS classifies support tickets, drafts contextual replies, and only escalates complex issues to your team.
+
+```
+Customer email → Classification → Auto-draft reply → Human approval (if needed)
+```
+
+**Examples:**
+- SaaS companies responding to pricing inquiries
+- E-commerce handling order status questions
+- B2B companies qualifying leads from inbound emails
+
+#### 🤝 Vendor & Supplier Negotiations
+Let MailOS negotiate on your behalf within policy bounds. Set max discount percentages, approval thresholds, and round limits — the AI handles the back-and-forth.
+
+**Examples:**
+- Negotiating bulk purchase discounts
+- Renegotiating contract terms with vendors
+- Scheduling meetings with suppliers across time zones
+
+#### 📈 Lead Qualification & Routing
+Automatically classify and route incoming business inquiries. MailOS identifies high-value opportunities and notifies the right team members.
+
+**Examples:**
+- Qualifying enterprise leads from demo requests
+- Routing partnership inquiries to business development
+- Escalating urgent sales opportunities immediately
+
+#### 🗞️ Competitive Intelligence
+Extract insights from industry newsletters automatically. MailOS reads, summarizes, and identifies trends across multiple sources.
+
+**Examples:**
+- Tracking competitor announcements
+- Monitoring industry news for strategic insights
+- Building a knowledge base from subscribe content
+
+---
+
+### For Developers
+
+#### 🔌 Build Email-Aware Applications
+Embed MailOS into your application to give it email superpowers. Every email becomes a structured event your code can react to.
+
+**Integration Examples:**
+- CRM that auto-creates contacts from email signatures
+- Project management tool that creates tasks from action items
+- Helpdesk that auto-categorizes and routes tickets
+
+```javascript
+// React to classified emails via API
+const emails = await fetch('/emails?label=Customer&status=classified');
+emails.forEach(email => {
+  // Your custom logic here
+  crm.createContact(email.from, email.classification);
+});
+```
+
+#### 🤖 Custom Agent Pipelines
+Extend the agent pipeline for your specific domain. Create specialized agents that plug into the same event bus.
+
+**Examples:**
+- Legal document classifier for law firms
+- Invoice extractor for accounting automation
+- Support ticket sentiment analyzer
+
+#### 🔗 Webhook-Driven Workflows
+Use the ingest endpoint to feed messages from any source into the pipeline — Slack, GitHub, WhatsApp, or custom webhooks.
+
+```bash
+curl -X POST http://localhost:4000/ingest \
+  -H "Authorization: Bearer $API_KEY" \
+  -d '{"from": "slack", "subject": "New support ticket", "text": "..."}'
+```
+
+#### 📊 Analytics & Reporting
+Query the API to build custom dashboards, reports, or integrate with business intelligence tools.
+
+**Examples:**
+- Customer sentiment trends over time
+- Response time analytics
+- Classification accuracy metrics
+
+---
+
+### For Individuals & Professionals
+
+#### 📨 Inbox Zero Assistant
+Stop drowning in email. MailOS archives newsletters, drafts replies to common questions, and only surfaces what actually needs your attention.
+
+**Examples:**
+- Freelancers managing client inquiries
+- Consultants handling meeting requests
+- Professionals triaging high-volume inboxes
+
+#### 📅 Meeting Scheduling Assistant
+Let MailOS handle the back-and-forth of scheduling. It checks your calendar and proposes times that work — no more "What time works for you?" email chains.
+
+**Examples:**
+- Scheduling client calls across time zones
+- Coordinating interviews with candidates
+- Managing recurring meeting requests
+
+#### 🛡️ Phishing & Spam Protection
+Guardian agent blocks malicious emails before they reach you. Heuristics catch known patterns; AI detects sophisticated attacks.
+
+**Examples:**
+- Blocking BEC (Business Email Compromise) attempts
+- Filtering out AI-generated phishing attempts
+- Protecting against prompt injection attacks
+
+#### 🧠 Personal Knowledge Base
+Every email you've sent or received becomes searchable memory. Ask questions and get answers based on your actual communication history.
+
+```bash
+# Natural language query
+curl -X POST http://localhost:4000/ask \
+  -d '{"question": "What did John say about the Q4 budget?"}'
+```
+
+---
+
+### Industry-Specific Applications
+
+#### 🏥 Healthcare
+- Patient inquiry triage (non-diagnostic)
+- Appointment scheduling automation
+- Insurance verification correspondence
+
+#### 🏦 Financial Services
+- Client onboarding communication
+- Document request automation
+- Compliance notice handling
+
+#### 🏠 Real Estate
+- Property inquiry responses
+- Showing schedule coordination
+- Document collection from buyers
+
+#### 🎓 Education
+- Student inquiry management
+- Office hour scheduling
+- Administrative communication automation
+
+#### 🛒 E-Commerce
+- Order status inquiries
+- Return/exchange processing
+- Vendor communication
 
 ---
 

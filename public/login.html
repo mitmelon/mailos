@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MailOS</title>
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="apple-touch-icon" href="/logo.png">
 <script>
   (function () {
     var t = localStorage.getItem('mailos-theme') || 'light';
@@ -17,11 +19,13 @@
   body { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
   .wrap { position: relative; z-index: 2; width: 100%; max-width: 420px; padding: 24px; }
   .logo-mark {
-    width: 44px; height: 44px; border-radius: 12px;
-    background: linear-gradient(155deg, var(--accent), #7a76ff);
+    width: 52px; height: 52px;
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 26px;
-    box-shadow: 0 10px 30px rgba(91,91,240,0.28);
+  }
+  .logo-mark img {
+    width: 52px; height: 52px;
+    border-radius: 12px;
   }
   .card { padding: 44px 40px 34px; }
   h1 { font-size: 21px; font-weight: 600; text-align: center; margin: 0 0 8px; letter-spacing: -0.01em; }
@@ -38,10 +42,7 @@
 
   <div class="wrap fade-up">
     <div class="logo-mark">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 7l9 6 9-6"/>
-        <rect x="3" y="5" width="18" height="14" rx="2.5"/>
-      </svg>
+      <img src="/logo.png" alt="MailOS" width="32" height="32" style="border-radius: 8px;">
     </div>
 
     <div class="glass card">
