@@ -1,3 +1,0 @@
-{"$$indexCreated":{"fieldName":"id","unique":true,"sparse":false}}
-{"$$indexCreated":{"fieldName":"id","unique":true}}
-{"id":"settings","createdAt":"2026-07-19T04:10:21.551Z","qwenApiKey":"sk-ws-H.XDYIYR.vCi7.MEUCIFCJ7JLMQLHfL8paj_-EqyL4jToLGcRHcYifBbh81h93AiEAq4T3csfikXxolnv0v854yLX4FQL3VapvVkkoCRdo5nc","qwenBaseUrl":"https://dashscope-intl.aliyuncs.com/compatible-mode/v1","qwenModel":"qwen-plus","qwenEmbeddingModel":"text-embedding-v3","negotiationMaxRounds":10,"negotiationMaxDiscountPercent":15,"negotiationRequireApprovalAboveAmount":null,"negotiationMinConfidenceToAutoSend":0.1,"_id":"S4LsYw1NLYvhvW06"}
