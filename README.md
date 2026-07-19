@@ -217,4 +217,423 @@ public/          Web UI — plain HTML/CSS/JS, no build step
 
 ---
 
+## 📡 REST API Reference
+
+All endpoints require authentication. Two methods are supported:
+
+### Authentication
+
+| Method | Use Case |
+|--------|----------|
+| **Session Cookie** | Browser UI — login via `/auth/login` to get a signed cookie |
+| **API Key** | External/programmatic clients — send as `Authorization: Bearer <key>` or `x-api-key: <key>` header |
+
+**Setting up API Keys:**
+
+Add to your `.env` file:
+```bash
+API_KEYS=key1,key2,key3
+```
+
+Or set a single key:
+```bash
+API_KEYS=your-secret-api-key
+```
+
+Then use it in requests:
+```bash
+curl -H "Authorization: Bearer your-secret-api-key" http://localhost:4000/emails
+# or
+curl -H "x-api-key: your-secret-api-key" http://localhost:4000/emails
+```
+
+---
+
+### 🔐 Authentication Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/auth/status` | Check if admin account exists (public) |
+| `POST` | `/auth/register` | Create admin account (first-run only) |
+| `POST` | `/auth/login` | Login and receive session cookie |
+| `POST` | `/auth/logout` | Clear session cookie |
+| `GET` | `/auth/me` | Get current logged-in user |
+
+#### Register (First-Run Only)
+```bash
+curl -X POST http://localhost:4000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "your-password"}'
+```
+
+#### Login
+```bash
+curl -X POST http://localhost:4000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "your-password"}'
+
+# Response includes Set-Cookie header for subsequent requests
+```
+
+---
+
+### 📬 Mailbox Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/mailboxes` | List all mailboxes (credentials excluded) |
+| `POST` | `/connect-email` | Connect a new mailbox |
+| `POST` | `/disconnect-email` | Disconnect a mailbox |
+| `GET` | `/mailboxes/:id/profile` | Get mailbox profile |
+| `PATCH` | `/mailboxes/:id` | Update mailbox settings |
+| `POST` | `/mailboxes/:id/documents` | Add reference document |
+| `DELETE` | `/mailboxes/:id/documents/:docId` | Remove document |
+| `POST` | `/sync` | Manually sync mailbox(es) |
+
+#### Connect a Mailbox
+```bash
+curl -X POST http://localhost:4000/connect-email \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "host": "imap.gmail.com",
+    "port": 993,
+    "user": "you@gmail.com",
+    "password": "your-app-password",
+    "tls": true,
+    "smtpHost": "smtp.gmail.com",
+    "smtpPort": 465,
+    "label": "My Gmail"
+  }'
+```
+
+**Request Fields:**
+| Field | Required | Description |
+|-------|----------|-------------|
+| `host` | ✅ | IMAP server hostname |
+| `port` | No | IMAP port (default: 993) |
+| `user` | ✅ | Email address/username |
+| `password` | ✅ | Email password or app password |
+| `tls` | No | Use TLS (default: true) |
+| `smtpHost` | ✅ | SMTP server hostname |
+| `smtpPort` | No | SMTP port (default: 587, use 465 for SSL) |
+| `label` | No | Friendly name for the mailbox |
+| `webhookUrl` | No | Webhook for escalation notifications |
+| `negotiationPolicy` | No | Per-mailbox negotiation rules |
+| `profile` | No | Initial profile settings |
+
+#### Update Mailbox
+```bash
+curl -X PATCH http://localhost:4000/mailboxes/:id \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "label": "Work Inbox",
+    "webhookUrl": "https://hooks.slack.com/services/...",
+    "profile": {
+      "calendar": "https://calendar.google.com/...",
+      "priorities": ["urgent", "important"]
+    }
+  }'
+```
+
+---
+
+### 📧 Email Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/emails` | List emails with filters |
+| `GET` | `/emails/:id` | Get single email |
+| `POST` | `/emails/:id/send-draft` | Approve and send draft reply |
+| `POST` | `/emails/:id/dismiss` | Dismiss without sending |
+
+#### List Emails
+```bash
+# Get all emails
+curl -H "Authorization: Bearer your-api-key" \
+  http://localhost:4000/emails
+
+# Filter by classification
+curl -H "Authorization: Bearer your-api-key" \
+  "http://localhost:4000/emails?label=Customer&status=classified&limit=20"
+
+# Filter by mailbox
+curl -H "Authorization: Bearer your-api-key" \
+  "http://localhost:4000/emails?mailboxId=abc-123"
+```
+
+**Query Parameters:**
+| Param | Description |
+|-------|-------------|
+| `mailboxId` | Filter by mailbox ID |
+| `label` | Classification label (Customer, Meeting, Newsletter, etc.) |
+| `action` | Decision action (archive, reply_draft, ignore, notify, requires_human) |
+| `status` | Email status (received, classified, etc.) |
+| `limit` | Max results (default: 50) |
+
+#### Send Draft Reply
+```bash
+curl -X POST http://localhost:4000/emails/:id/send-draft \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"body": "Thank you for your inquiry. Our pricing starts at $99/month."}'
+
+# Or send the existing draft without editing:
+curl -X POST http://localhost:4000/emails/:id/send-draft \
+  -H "Authorization: Bearer your-api-key"
+```
+
+---
+
+### 🤝 Negotiation Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/negotiations` | List negotiations |
+| `GET` | `/negotiations/:id` | Get negotiation details |
+| `POST` | `/negotiations` | Start owner-initiated negotiation |
+| `POST` | `/negotiations/:id/resume` | Resume escalated negotiation |
+
+#### Start Negotiation
+```bash
+curl -X POST http://localhost:4000/negotiations \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mailboxId": "abc-123",
+    "to": "seller@example.com",
+    "subject": "Bulk License Inquiry",
+    "intent": {
+      "type": "purchase",
+      "goal": "Buy a 50-seat enterprise license",
+      "constraints": {
+        "maxPrice": 5000,
+        "preferredPaymentTerms": "net-30"
+      }
+    },
+    "policy": {
+      "maxDiscountPercent": 10,
+      "maxRounds": 8
+    }
+  }'
+```
+
+#### List Negotiations
+```bash
+curl -H "Authorization: Bearer your-api-key" \
+  "http://localhost:4000/negotiations?status=open"
+```
+
+---
+
+### 🧠 Memory Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/memory` | List/search memories |
+| `GET` | `/memory/:id` | Get memory with sources |
+| `DELETE` | `/memory/:id` | Delete a memory |
+| `POST` | `/memory/consolidate` | Trigger memory consolidation |
+
+#### Search Memory
+```bash
+curl -H "Authorization: Bearer your-api-key" \
+  "http://localhost:4000/memory?q=pricing&limit=10"
+```
+
+---
+
+### 📊 Dashboard Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/dashboard` | Aggregate metrics |
+| `GET` | `/dashboard/mailboxes` | Per-mailbox breakdown |
+| `GET` | `/daily-report` | Daily summary report |
+
+```bash
+curl -H "Authorization: Bearer your-api-key" \
+  http://localhost:4000/dashboard
+
+# Filter by mailbox
+curl -H "Authorization: Bearer your-api-key" \
+  "http://localhost:4000/dashboard?mailboxId=abc-123"
+```
+
+---
+
+### 💡 Knowledge & Opportunity Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/knowledge` | Newsletter insights extracted |
+| `GET` | `/opportunities` | Business opportunities found |
+
+```bash
+curl -H "Authorization: Bearer your-api-key" \
+  "http://localhost:4000/knowledge?limit=20"
+
+curl -H "Authorization: Bearer your-api-key" \
+  http://localhost:4000/opportunities
+```
+
+---
+
+### ⚙️ Settings Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/settings` | Get current settings (keys masked) |
+| `PATCH` | `/settings` | Update settings (takes effect immediately) |
+
+```bash
+curl -X PATCH http://localhost:4000/settings \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "qwenModel": "qwen-plus",
+    "negotiationMaxRounds": 12,
+    "negotiationMaxDiscountPercent": 20
+  }'
+```
+
+**Editable Settings:**
+- `qwenApiKey` — Qwen API key
+- `qwenBaseUrl` — Qwen API endpoint
+- `qwenModel` — Model for completions
+- `qwenEmbeddingModel` — Model for embeddings
+- `negotiationMaxRounds` — Max negotiation rounds
+- `negotiationMaxDiscountPercent` — Max discount percentage
+- `negotiationRequireApprovalAboveAmount` — Amount threshold for approval
+- `negotiationMinConfidenceToAutoSend` — Confidence threshold for auto-send
+
+---
+
+### 🤖 Agent Status
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/agents/status` | Status of all agents |
+
+```bash
+curl -H "Authorization: Bearer your-api-key" \
+  http://localhost:4000/agents/status
+```
+
+---
+
+### ❓ Q&A Endpoint
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/ask` | Ask a question to the QA agent |
+
+```bash
+curl -X POST http://localhost:4000/ask \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What pricing did we discuss with Acme Corp?",
+    "mailboxId": "abc-123"
+  }'
+```
+
+---
+
+### 📥 Ingest Endpoint (Webhook)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/ingest` | Inject message into pipeline |
+
+Useful for webhook-style connectors or testing:
+
+```bash
+curl -X POST http://localhost:4000/ingest \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mailboxId": "abc-123",
+    "from": "test@example.com",
+    "subject": "Test Message",
+    "text": "This is a test message."
+  }'
+```
+
+---
+
+### 💾 Backup Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/backup` | Full instance backup |
+| `GET` | `/mailboxes/:id/backup` | Single mailbox backup |
+
+```bash
+# Full backup
+curl -H "Authorization: Bearer your-api-key" \
+  http://localhost:4000/backup \
+  -o mailos-backup.json
+
+# Single mailbox
+curl -H "Authorization: Bearer your-api-key" \
+  http://localhost:4000/mailboxes/abc-123/backup \
+  -o mailbox-backup.json
+```
+
+**Note:** Credentials are never included in backups (security feature).
+
+---
+
+### 🖥️ System Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check (public) |
+| `GET` | `/system/version` | Current version info |
+| `GET` | `/system/update-check` | Check for updates |
+| `POST` | `/system/update` | Trigger in-app update |
+| `GET` | `/system/errors` | Recent error logs |
+| `GET` | `/system/login-blocks` | List login blocks |
+| `DELETE` | `/system/login-blocks/:fingerprint` | Remove login block |
+
+---
+
+### 🌐 Dashboard URL
+
+The web dashboard is available at:
+
+```
+http://localhost:4000/login.html
+```
+
+On first run, you'll see the setup page to create your admin account.
+
+---
+
+### 🌍 Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|----------|
+| `QWEN_API_KEY` | Qwen API key | Required |
+| `JWT_SECRET` | Secret for JWT signing | Dev insecure default ⚠️ |
+| `ENCRYPTION_KEY` | 32-char key for credential encryption | Dev insecure default ⚠️ |
+| `API_KEYS` | Comma-separated API keys for external access | None |
+| `ADMIN_USERNAME` | Bootstrap admin username | None |
+| `ADMIN_PASSWORD` | Bootstrap admin password | None |
+| `PORT` | Server port | 4000 |
+| `HOST` | Server bind address | 0.0.0.0 |
+| `NODE_ENV` | Environment | development |
+| `MONGODB_URI` | MongoDB connection string | Embedded NeDB |
+| `REDIS_URL` | Redis URL for queues | In-process |
+| `NEGOTIATION_MAX_ROUNDS` | Max negotiation rounds | 10 |
+| `NEGOTIATION_MAX_DISCOUNT_PERCENT` | Max discount allowed | 15 |
+| `NEGOTIATION_APPROVAL_ABOVE` | Amount requiring approval | None |
+| `NEGOTIATION_MIN_CONFIDENCE` | Min confidence for auto-send | 0.7 |
+| `NEGOTIATION_WEBHOOK_URL` | Default escalation webhook | None |
+| `GITHUB_REPO` | GitHub repo for update checks | None |
+
+---
+
 <p align="center">Made with 🧠 + ✉️ + Qwen</p>
